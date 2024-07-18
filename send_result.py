@@ -8,19 +8,12 @@ import base64
 from dotenv import load_dotenv
 import os
 import time
-import logging
 
 # .env 파일 로드
 load_dotenv()
 
 # OpenAI API 키 설정
-openai.api_key = os.getenv("OPENAI_API_KEY")
-
-# 로그 설정
-log_file_path = 'C:/Users/wjdgk/Desktop/2024_SW/script.log'
-logging.basicConfig(filename=log_file_path, level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
-
-logging.info('스크립트 시작')
+openai.api_key = os.getenv('OPENAI_API_KEY')
 
 # 숫자만 추출하는 함수
 def extract_int_from_string(s):
@@ -32,7 +25,6 @@ def generate_incident_description(place, time, weather):
     장소: {place}
     시간: {time}
     날씨: {weather}
-
     오늘 발생한 사건에 대한 요약을 300자 이내로 작성해줘. 모든 필드는 비어 있지 않게 채워줘.
     """
     response = openai.ChatCompletion.create(
@@ -87,14 +79,14 @@ def generate_image(prompt, size):
     buffered = BytesIO()
     img.save(buffered, format="PNG")
     img_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
-    
+
     return img_base64
 
 # 필드가 비어 있으면 다시 생성하는 함수
 def regenerate_field(prompt_template, existing_data, required_fields):
     while not all(existing_data.get(field) for field in required_fields):
         response = openai.ChatCompletion.create(
-            model="gpt-4",
+            model="gpt-4o",
             messages=[
                 {"role": "system", "content": "당신은 추리 게임 시나리오 기획자입니다."},
                 {"role": "user", "content": prompt_template}
@@ -124,18 +116,13 @@ place = random.choice(places)
 when = random.choice(times)
 weather = random.choice(weather_conditions)
 
-logging.info(f'선택된 장소: {place}, 시간: {when}, 날씨: {weather}')
-
 # 사건 상황 생성
 story_line = generate_incident_description(place, when, weather)
-logging.info(f'생성된 사건 상황: {story_line}')
 
 # 피해자 정보 생성
 victim_data = generate_victim_description(story_line)
 victim_age = extract_int_from_string(victim_data['나이'])
 story_line_with_victim = f"피해자 정보:\n이름: {victim_data['이름']}\n나이: {victim_age}\n성별: {victim_data['성별']}\n직업: {victim_data['직업']}\n\n{story_line}"
-
-logging.info(f'생성된 피해자 정보: {victim_data}')
 
 # 이미지 생성 프롬프트
 image_prompt = f"{place}에서 {when} 동안, {weather} 날씨의 분위기를 반영한 장면. 이미지에 텍스트가 포함되어서는 안됩니다."
@@ -154,8 +141,9 @@ response_data = {
     "victimOccupation": victim_data['직업']
 }
 
-logging.info("Sending the following payload:")
-logging.info(json.dumps(response_data, indent=4, ensure_ascii=False))
+# 디버깅을 위해 요청 보내기 전에 데이터를 출력합니다.
+print("Sending the following payload:")
+print(json.dumps(response_data, indent=4, ensure_ascii=False))
 
 # HTTP 요청 헤더 설정
 headers = {
@@ -167,15 +155,15 @@ final_url = "http://43.202.161.19:8080/api/resource/story"  # 최종 엔드포�
 try:
     final_response = requests.post(final_url, data=json.dumps(response_data, ensure_ascii=False).encode('utf-8'), headers=headers)
     final_response.raise_for_status()
-    logging.info("Final request to http://43.202.161.19:8080/api/resource/story")
-    logging.info(final_response.status_code)
-    logging.info(final_response.json())
+    print("Final request to http://43.202.161.19:8080/api/resource/story")
+    print(final_response.status_code)
+    print(final_response.json())
 except requests.exceptions.HTTPError as err:
-    logging.error(f"HTTP error occurred: {err}")
+    print(f"HTTP error occurred: {err}")
     if err.response.content:
-        logging.error("Response content:", err.response.content.decode())
+        print("Response content:", err.response.content.decode())
 except Exception as err:
-    logging.error(f"Other error occurred: {err}")
+    print(f"Other error occurred: {err}")
 
 # 용의자 생성 및 API 전송
 suspects = []
@@ -192,7 +180,7 @@ def generate_and_send_suspect(i):
     증거물품: 용의자가 남긴 증거물품
     증거물 설명: 증거물품에 대한 설명
     """
-    
+
     retry_attempts = 3  # 시도 횟수를 늘립니다.
     for attempt in range(retry_attempts):
         try:
@@ -219,7 +207,7 @@ def generate_and_send_suspect(i):
             # 모든 필드가 채워졌는지 확인
             if not all(suspect_data.get(field) for field in required_suspect_fields):
                 raise ValueError(f"Some fields are missing in suspect {i+1}")
-            
+
             # 이미지 생성
             img_prompt = f"""
             하단의 내용을 반영하여 현실적인 인물 1인의 정면사진을 생성
@@ -254,11 +242,11 @@ def generate_and_send_suspect(i):
                 "evidenceInfo": suspect_data.get("증거물 설명"),
                 "evidenceImage": evidence_image
             }
-            
+
             # 모든 필드가 채워진 경우에만 리스트에 추가
             if all(suspect_payload.values()):
                 suspects.append(suspect_payload)
-            
+
             # HTTP 요청 헤더 설정
             headers = {
                 'Content-Type': 'application/json; charset=utf-8'
@@ -269,31 +257,31 @@ def generate_and_send_suspect(i):
             try:
                 final_response = requests.post(final_url, data=json.dumps(suspect_payload, ensure_ascii=False).encode('utf-8'), headers=headers)
                 final_response.raise_for_status()
-                logging.info(f"Final request for suspect {i+1} to {final_url}")
-                logging.info(final_response.status_code)
-                logging.info(final_response.json())
+                print(f"Final request for suspect {i+1} to {final_url}")
+                print(final_response.status_code)
+                print(final_response.json())
                 break  # 성공하면 루프 탈출
 
             except requests.exceptions.HTTPError as err:
-                logging.error(f"HTTP error occurred: {err}")
+                print(f"HTTP error occurred: {err}")
                 if err.response.content:
-                    logging.error("Response content:", err.response.content.decode())
+                    print("Response content:", err.response.content.decode())
                 if attempt < retry_attempts - 1:
-                    logging.info(f"Retrying... ({attempt+1}/{retry_attempts})")
+                    print(f"Retrying... ({attempt+1}/{retry_attempts})")
                     time.sleep(5)  # 5초 대기 후 재시도
 
         except Exception as e:
-            logging.error(f"Error generating suspect {i+1}: {e}")
+            print(f"Error generating suspect {i+1}: {e}")
             if "Your request was rejected as a result of our safety system" in str(e):
-                logging.info(f"Skipping suspect {i+1} due to safety system restrictions.")
+                print(f"Skipping suspect {i+1} due to safety system restrictions.")
             if attempt < retry_attempts - 1:
-                logging.info(f"Retrying... ({attempt+1}/{retry_attempts})")
+                print(f"Retrying... ({attempt+1}/{retry_attempts})")
                 time.sleep(5)  # 5초 대기 후 재시도
 
 # 용의자 4명 생성 및 전송
 while len(suspects) < 4:
     generate_and_send_suspect(len(suspects))
-    
+
 # 범인 결과 생성
 culprit_prompt = f"""
 다음 용의자 중 한 명이 범인입니다. 용의자 정보를 읽고 범인을 골라 아래 형식을 작성. 모든 필드는 채워져야함.
@@ -381,12 +369,10 @@ result_url = "http://43.202.161.19:8080/api/resource/result"  # 최종 엔드포
 try:
     result_response = requests.post(result_url, data=json.dumps(result_data), headers=headers)
     result_response.raise_for_status()
-    logging.info("Final request to http://43.202.161.19:8080/api/resource/result")
-    logging.info(result_response.status_code)
-    logging.info(result_response.json())
+    print("Final request to http://43.202.161.19:8080/api/resource/result")
+    print(result_response.status_code)
+    print(result_response.json())
 except requests.exceptions.HTTPError as err:
-    logging.error(f"HTTP error occurred: {err}")
+    print(f"HTTP error occurred: {err}")
 except Exception as err:
-    logging.error(f"Other error occurred: {err}")
-
-logging.info('스크립트 종료')
+    print(f"Other error occurred: {err}")
