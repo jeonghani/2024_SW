@@ -8,12 +8,17 @@ import base64
 from dotenv import load_dotenv
 import os
 import time
+import logging
 
 # .env 파일 로드
 load_dotenv()
 
 # OpenAI API 키 설정
-openai.api_key = os.getenv('OPENAI_API_KEY')
+openai.api_key = os.getenv("OPENAI_API_KEY")
+
+# 로그 설정
+log_file_path = 'C:/Users/wjdgk/Desktop/2024_SW/script.log'
+logging.basicConfig(filename=log_file_path, level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # 숫자만 추출하는 함수
 def extract_int_from_string(s):
