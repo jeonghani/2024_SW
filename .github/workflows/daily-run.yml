@@ -3,6 +3,7 @@ name: Daily Run
 on:
   schedule:
     - cron: '0 0 * * *'  # 매일 자정에 실행
+  workflow_dispatch:  # 수동 트리거 추가
 
 jobs:
   run-job:
