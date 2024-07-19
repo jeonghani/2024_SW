@@ -5,12 +5,8 @@ import json
 from PIL import Image
 from io import BytesIO
 import base64
-from dotenv import load_dotenv
 import os
 import time
-
-# .env 파일 로드
-load_dotenv()
 
 # OpenAI API 키 설정
 openai.api_key = os.getenv('OPENAI_API_KEY')
