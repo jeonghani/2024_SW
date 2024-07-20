@@ -66,11 +66,10 @@ def generate_image(prompt, size):
     response = client.images.generate(
         model="dall-e-3",
         prompt=prompt,
-        n=1,
         size=size,
-        style="vivid"
+        n=1
     )
-    image_url = response['data'][0]['url']
+    image_url = response.data[0].url
     img_response = requests.get(image_url)
     img = Image.open(BytesIO(img_response.content)).convert("RGBA")
 
