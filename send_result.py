@@ -1,4 +1,4 @@
-import openai
+from openai import OpenAI
 import random
 import requests
 import json
@@ -8,8 +8,10 @@ import base64
 import os
 import time
 
-# OpenAI API 키 설정
-openai.api_key = os.getenv('OPENAI_API_KEY')
+# # OpenAI API 키 설정
+# openai.api_key = os.getenv('OPENAI_API_KEY')
+
+client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 # 숫자만 추출하는 함수
 def extract_int_from_string(s):
@@ -23,14 +25,14 @@ def generate_incident_description(place, time, weather):
     날씨: {weather}
     오늘 발생한 사건에 대한 요약을 300자 이내로 작성해줘. 모든 필드는 비어 있지 않게 채워줘.
     """
-    response = openai.ChatCompletion.create(
+    response = client.chat.completions.create(
         model="gpt-4o",
         messages=[
             {"role": "system", "content": "당신은 추리 게임 시나리오 기획자입니다."},
             {"role": "user", "content": incident_prompt}
         ]
     )
-    incident_description = response["choices"][0]["message"]["content"].strip()
+    incident_description = response.choices[0].message.content.strip()
     return incident_description
 
 # 피해자 정보 생성 프롬프트 함수
@@ -42,14 +44,14 @@ def generate_victim_description(incident_description):
     성별: 피해자의 성별 (필수)
     직업: 피해자의 직업 (필수)
     """
-    response = openai.ChatCompletion.create(
+    response = client.chat.completions.create(
         model="gpt-4o",
         messages=[
             {"role": "system", "content": "당신은 추리 게임 시나리오 기획자입니다."},
             {"role": "user", "content": victim_prompt}
         ]
     )
-    victim_description = response["choices"][0]["message"]["content"].strip()
+    victim_description = response.choices[0].message.content.strip()
     victim_data = {}
 
     for line in victim_description.split('\n'):
@@ -61,7 +63,7 @@ def generate_victim_description(incident_description):
 
 # 이미지 생성 함수
 def generate_image(prompt, size):
-    response = openai.Image.create(
+    response = client.Image.create(
         model="dall-e-3",
         prompt=prompt,
         n=1,
@@ -81,14 +83,14 @@ def generate_image(prompt, size):
 # 필드가 비어 있으면 다시 생성하는 함수
 def regenerate_field(prompt_template, existing_data, required_fields):
     while not all(existing_data.get(field) for field in required_fields):
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="gpt-4o",
             messages=[
                 {"role": "system", "content": "당신은 추리 게임 시나리오 기획자입니다."},
                 {"role": "user", "content": prompt_template}
             ]
         )
-        response_data = response["choices"][0]["message"]["content"].strip()
+        response_data = response.choices[0].message.content.strip()
         for line in response_data.split('\n'):
             if ': ' in line:
                 key, value = line.split(': ', 1)
@@ -180,7 +182,7 @@ def generate_and_send_suspect(i):
     retry_attempts = 3  # 시도 횟수를 늘립니다.
     for attempt in range(retry_attempts):
         try:
-            response = openai.ChatCompletion.create(
+            response = client.chat.completions.create(
                 model="gpt-4o",
                 messages=[
                     {"role": "system", "content": "당신은 추리 게임 시나리오 기획자입니다."},
@@ -188,7 +190,7 @@ def generate_and_send_suspect(i):
                 ]
             )
 
-            suspect_info = response["choices"][0]["message"]["content"].strip()
+            suspect_info = response.choices[0].message.content.strip()
             suspect_data = {}
 
             for line in suspect_info.split('\n'):
@@ -292,7 +294,7 @@ culprit_prompt += "\n용의자 정보:\n"
 for i, suspect in enumerate(suspects):
     culprit_prompt += f"{i+1}. 이름: {suspect['suspectName']}, 나이: {suspect['suspectAge']}, 성별: {suspect['suspectGender']}, 직업: {suspect['suspectOccupation']}, 특이사항: {suspect['suspectTrait']}, 증거물품: {suspect['evidenceName']}, 증거물 설명: {suspect['evidenceInfo']}\n"
 
-response = openai.ChatCompletion.create(
+response = client.chat.completions.create(
     model="gpt-4o",
     messages=[
         {"role": "system", "content": "당신은 추리 게임 시나리오 기획자입니다."},
@@ -300,7 +302,7 @@ response = openai.ChatCompletion.create(
     ]
 )
 
-culprit_response = response["choices"][0]["message"]["content"].strip()
+culprit_response = response.choices[0].message.content.strip()
 culprit_data = {}
 for line in culprit_response.split('\n'):
     if ': ' in line:
