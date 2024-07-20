@@ -63,7 +63,7 @@ def generate_victim_description(incident_description):
 
 # 이미지 생성 함수
 def generate_image(prompt, size):
-    response = client.Image.create(
+    response = client.images.generate(
         model="dall-e-3",
         prompt=prompt,
         n=1,
