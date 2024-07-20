@@ -70,6 +70,7 @@ def generate_image(prompt, size):
         n=1
     )
     image_url = response.data[0].url
+    print(image_url)
     img_response = requests.get(image_url)
     img = Image.open(BytesIO(img_response.content)).convert("RGBA")
 
