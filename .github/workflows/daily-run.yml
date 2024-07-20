@@ -2,7 +2,7 @@ name: Daily Run
 
 on:
   schedule:
-    - cron: '15 15 * * *'  # 매일 한국 시간 자정에 실행
+    - cron: '0 15 * * *'  # 매일 한국 시간 자정에 실행
   workflow_dispatch:  # 수동 트리거 추가
 
 jobs:
