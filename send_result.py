@@ -208,7 +208,7 @@ def generate_and_send_suspect(i):
 
             # 이미지 생성
             img_prompt = f"""
-            하단의 내용을 반영하여 현실적인 인물 1인의 정면사진을 생성
+            하단의 내용을 반영하여 인물 1인의 정면 컬러사진을 현실에 실제 있는 인물처럼 생성 :
             1) 인물 정보이지만 이 텍스트를 포함해서는 안됩니다.
             - Name : {suspect_data.get("이름")}
             - Age: {suspect_data.get("나이")} years old
@@ -216,7 +216,8 @@ def generate_and_send_suspect(i):
             - Occupation: {suspect_data.get("직업")}
             2) 인물 얼굴은 이미지의 정중앙에 배치, 얼굴 크기는 이미지의 1/9
             3) 배경은 흐릿하게 처리하고, 인물만 명확하게 보여주세요.
-            4) 이미지에 텍스트를 포함하지 마세요.
+            4) 얼굴 특징을 실제 있는 인물처럼 현실적으로 표현하세요.
+            5) 이미지에 텍스트를 포함하지 마세요.
             """
             suspect_image = generate_image(img_prompt, "1024x1024")
 
