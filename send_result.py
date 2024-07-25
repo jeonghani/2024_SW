@@ -155,7 +155,7 @@ try:
     final_response.raise_for_status()
     print("Final request to http://43.202.161.19:8080/api/resource/story")
     print(final_response.status_code)
-    print(final_response.json())
+    # print(final_response.json())
 except requests.exceptions.HTTPError as err:
     print(f"HTTP error occurred: {err}")
     if err.response.content:
@@ -258,7 +258,7 @@ def generate_and_send_suspect(i):
                 final_response.raise_for_status()
                 print(f"Final request for suspect {i+1} to {final_url}")
                 print(final_response.status_code)
-                print(final_response.json())
+                # print(final_response.json())
                 break  # 성공하면 루프 탈출
 
             except requests.exceptions.HTTPError as err:
@@ -370,7 +370,7 @@ try:
     result_response.raise_for_status()
     print("Final request to http://43.202.161.19:8080/api/resource/result")
     print(result_response.status_code)
-    print(result_response.json())
+    # print(result_response.json())
 except requests.exceptions.HTTPError as err:
     print(f"HTTP error occurred: {err}")
 except Exception as err:
